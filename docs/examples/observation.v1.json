@@ -1,0 +1,51 @@
+{
+  "schema_version": "aerp-evidence-record/v1",
+  "evidence_id": "6319e8a1-364f-4d6d-b4df-4c3af527eb62",
+  "evidence_type": "observation",
+  "subject": {
+    "name": "production-api",
+    "uri": "https://api.example.com",
+    "digest": null
+  },
+  "claim": {
+    "statement": "The production API TLS configuration was collected",
+    "result": "observed",
+    "summary": "The scanner captured the endpoint configuration without assessing policy compliance.",
+    "criteria_refs": []
+  },
+  "producer": {
+    "name": "tls-scanner",
+    "version": "2.4.0",
+    "identity": "github-actions:example/api/.github/workflows/evidence.yml",
+    "invocation_id": "run-1234"
+  },
+  "method": {
+    "name": "tls-endpoint-scan",
+    "version": "1",
+    "parameters_digest": null
+  },
+  "timing": {
+    "observed_at": "2026-10-02T10:30:00Z",
+    "valid_from": null,
+    "valid_until": null
+  },
+  "environment": {
+    "name": "production",
+    "target": "https://api.example.com",
+    "correlation_ids": {
+      "workflow_run_id": "1234"
+    }
+  },
+  "decision_bindings": [],
+  "policy_refs": [],
+  "control_refs": [],
+  "artifacts": [],
+  "relationships": {
+    "derived_from": [],
+    "supersedes": [],
+    "revokes": []
+  },
+  "integrity": {
+    "record_fingerprint": null
+  }
+}
