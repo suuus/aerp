@@ -22,10 +22,12 @@ VERSION = "0.1.0"
 RECORD_SCHEMA_VERSION = "aerp-evidence-record/v1"
 BUNDLE_SCHEMA_VERSION = "aerp-evidence-bundle/v1"
 ADRP_SCHEMA_VERSION = "ape-decision-record/v1"
+ASRP_SCHEMA_VERSION = "ape-structure-record/v1"
 IN_TOTO_STATEMENT = "https://in-toto.io/Statement/v1"
 IN_TOTO_PREDICATE = "https://aerp.dev/predicate/evidence-bundle/v1"
 SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
 DECISION_ID = re.compile(r"^[A-Z][A-Z0-9-]{2,63}$")
+STRUCTURE_ID = re.compile(r"^STR-[A-Z0-9][A-Z0-9-]{1,62}$")
 ADRP_REQUIRED_KEYS = {
     "schema_version",
     "decision_id",
@@ -50,6 +52,26 @@ ADRP_REQUIRED_KEYS = {
     "gaps",
     "ratification",
 }
+ASRP_REQUIRED_KEYS = {
+    "schema_version",
+    "structure_id",
+    "record_id",
+    "record_version",
+    "status",
+    "title",
+    "description",
+    "scope",
+    "intent_bindings",
+    "actors",
+    "elements",
+    "gates",
+    "entry_points",
+    "evidence_requirements",
+    "artifacts",
+    "relationships",
+    "lifecycle",
+    "integrity",
+}
 EVIDENCE_TYPES = {"observation", "assessment", "approval", "execution", "outcome", "drift"}
 RESULTS = {
     "observed",
@@ -73,6 +95,7 @@ RECORD_KEYS = {
     "timing",
     "environment",
     "decision_bindings",
+    "structure_bindings",
     "policy_refs",
     "control_refs",
     "artifacts",
@@ -225,8 +248,10 @@ def payload(value: dict[str, Any]) -> dict[str, Any]:
     result = copy.deepcopy(value)
     integrity = result.get("integrity")
     if isinstance(integrity, dict):
-        integrity["record_fingerprint"] = None
-        integrity["bundle_fingerprint"] = None
+        if "record_fingerprint" in integrity:
+            integrity["record_fingerprint"] = None
+        if "bundle_fingerprint" in integrity:
+            integrity["bundle_fingerprint"] = None
     return result
 
 
@@ -264,6 +289,29 @@ def validate_binding(value: Any, label: str) -> None:
     uuid_value(item["record_id"], f"{label}.record_id")
     fail(isinstance(item["record_version"], int) and item["record_version"] >= 1, f"{label}.record_version is invalid")
     fail(isinstance(item["record_fingerprint"], str) and SHA256.fullmatch(item["record_fingerprint"]), f"{label}.record_fingerprint is invalid")
+
+
+def validate_structure_binding(value: Any, label: str) -> None:
+    item = exact_keys(
+        value,
+        {"structure_id", "record_id", "record_version", "record_fingerprint"},
+        label,
+    )
+    fail(
+        isinstance(item["structure_id"], str)
+        and STRUCTURE_ID.fullmatch(item["structure_id"]),
+        f"{label}.structure_id is invalid",
+    )
+    uuid_value(item["record_id"], f"{label}.record_id")
+    fail(
+        isinstance(item["record_version"], int) and item["record_version"] >= 1,
+        f"{label}.record_version is invalid",
+    )
+    fail(
+        isinstance(item["record_fingerprint"], str)
+        and SHA256.fullmatch(item["record_fingerprint"]),
+        f"{label}.record_fingerprint is invalid",
+    )
 
 
 def validate_artifact(value: Any, label: str) -> None:
@@ -326,6 +374,17 @@ def validate_record(record: dict[str, Any], *, check_fingerprint: bool = True) -
         for item in record["decision_bindings"]
     ]
     fail(len(binding_ids) == len(set(binding_ids)), "decision_bindings must not contain duplicates")
+    fail(isinstance(record["structure_bindings"], list), "structure_bindings must be an array")
+    for index, binding in enumerate(record["structure_bindings"]):
+        validate_structure_binding(binding, f"structure_bindings[{index}]")
+    structure_ids = [
+        (item["structure_id"], item["record_id"], item["record_version"])
+        for item in record["structure_bindings"]
+    ]
+    fail(
+        len(structure_ids) == len(set(structure_ids)),
+        "structure_bindings must not contain duplicates",
+    )
     text_list(record["policy_refs"], "policy_refs")
     text_list(record["control_refs"], "control_refs")
 
@@ -422,6 +481,24 @@ def decision_binding(path: Path) -> dict[str, Any]:
     }
 
 
+def structure_binding(path: Path) -> dict[str, Any]:
+    record = read_json(path)
+    fail(record.get("schema_version") == ASRP_SCHEMA_VERSION, f"{path} is not an ASRP v1 record")
+    missing = ASRP_REQUIRED_KEYS - set(record)
+    fail(not missing, f"{path} is missing ASRP fields: {sorted(missing)}")
+    binding = {
+        "structure_id": record["structure_id"],
+        "record_id": record["record_id"],
+        "record_version": record["record_version"],
+        "record_fingerprint": fingerprint(record),
+    }
+    validate_structure_binding(binding, str(path))
+    stored = record.get("integrity", {}).get("record_fingerprint")
+    if stored is not None:
+        fail(stored == binding["record_fingerprint"], f"{path} ASRP fingerprint mismatch")
+    return binding
+
+
 def producer(name: str, version: str, identity: str, invocation_id: str | None) -> dict[str, Any]:
     return {
         "name": name,
@@ -460,6 +537,7 @@ def make_record(
     environment_name: str,
     target: str,
     bindings: list[dict[str, Any]],
+    structure_bindings: list[dict[str, Any]],
     artifacts: list[dict[str, Any]],
     criteria_refs: list[str] | None = None,
     policy_refs: list[str] | None = None,
@@ -491,6 +569,7 @@ def make_record(
             "correlation_ids": correlation_ids or {},
         },
         "decision_bindings": bindings,
+        "structure_bindings": structure_bindings,
         "policy_refs": policy_refs or [],
         "control_refs": control_refs or [],
         "artifacts": artifacts,
@@ -515,6 +594,7 @@ def parse_pairs(values: list[str], label: str) -> dict[str, str]:
 
 def command_new(args: argparse.Namespace) -> dict[str, Any]:
     bindings = [decision_binding(Path(item)) for item in args.decision]
+    structures = [structure_binding(Path(item)) for item in args.structure]
     observed_at = args.observed_at or utc_now()
     artifacts: list[dict[str, Any]] = []
     root = Path(args.artifact_root).resolve()
@@ -542,6 +622,7 @@ def command_new(args: argparse.Namespace) -> dict[str, Any]:
         environment_name=args.environment,
         target=args.target,
         bindings=bindings,
+        structure_bindings=structures,
         artifacts=artifacts,
         criteria_refs=args.criteria_ref,
         policy_refs=args.policy_ref,
@@ -569,6 +650,26 @@ def command_bind(args: argparse.Namespace) -> dict[str, Any]:
     fail(key not in existing, "record already contains this decision binding")
     record["decision_bindings"].append(binding)
     record["decision_bindings"].sort(key=lambda item: (item["decision_id"], item["record_version"], item["record_id"]))
+    record["integrity"]["record_fingerprint"] = fingerprint(record)
+    validate_record(record)
+    atomic_create(Path(args.output), record)
+    return {"created": args.output, "binding": binding, "fingerprint": fingerprint(record)}
+
+
+def command_bind_structure(args: argparse.Namespace) -> dict[str, Any]:
+    record = read_json(Path(args.record))
+    validate_record(record)
+    binding = structure_binding(Path(args.structure))
+    key = (binding["structure_id"], binding["record_id"], binding["record_version"])
+    existing = {
+        (item["structure_id"], item["record_id"], item["record_version"])
+        for item in record["structure_bindings"]
+    }
+    fail(key not in existing, "record already contains this structure binding")
+    record["structure_bindings"].append(binding)
+    record["structure_bindings"].sort(
+        key=lambda item: (item["structure_id"], item["record_version"], item["record_id"])
+    )
     record["integrity"]["record_fingerprint"] = fingerprint(record)
     validate_record(record)
     atomic_create(Path(args.output), record)
@@ -609,6 +710,7 @@ def command_bundle_git_ape(args: argparse.Namespace) -> dict[str, Any]:
     deployment_id = root.name
     observed_at = args.observed_at or utc_now()
     bindings = [decision_binding(Path(item)) for item in args.decision]
+    structures = [structure_binding(Path(item)) for item in args.structure]
     producer_value = producer(
         args.producer,
         args.producer_version,
@@ -634,8 +736,8 @@ def command_bundle_git_ape(args: argparse.Namespace) -> dict[str, Any]:
         records.append(
             make_record(
                 evidence_type=evidence_type,
-                subject_name=deployment_id,
-                subject_uri=f"git-ape:deployment:{deployment_id}",
+                subject_name=path.stem,
+                subject_uri=f"git-ape:deployment:{deployment_id}#{item['path']}",
                 subject_digest=None,
                 statement=f"Git-Ape produced {item['path']} during deployment {deployment_id}",
                 result=result,
@@ -649,6 +751,7 @@ def command_bundle_git_ape(args: argparse.Namespace) -> dict[str, Any]:
                 environment_name=args.environment,
                 target=args.target,
                 bindings=bindings,
+                structure_bindings=structures,
                 artifacts=[item],
                 correlation_ids={"git_ape_deployment_id": deployment_id},
             )
@@ -730,12 +833,14 @@ def command_inspect(args: argparse.Namespace) -> dict[str, Any]:
             "subject": value["subject"],
             "result": value["claim"]["result"],
             "decision_bindings": value["decision_bindings"],
+            "structure_bindings": value["structure_bindings"],
             "artifacts": value["artifacts"],
             "fingerprint": fingerprint(value),
         }
     results: dict[str, int] = {}
     evidence_types: dict[str, int] = {}
     decisions: set[tuple[str, str, int, str]] = set()
+    structures: set[tuple[str, str, int, str]] = set()
     for record in value["records"]:
         results[record["claim"]["result"]] = results.get(record["claim"]["result"], 0) + 1
         evidence_types[record["evidence_type"]] = evidence_types.get(record["evidence_type"], 0) + 1
@@ -743,6 +848,15 @@ def command_inspect(args: argparse.Namespace) -> dict[str, Any]:
             decisions.add(
                 (
                     item["decision_id"],
+                    item["record_id"],
+                    item["record_version"],
+                    item["record_fingerprint"],
+                )
+            )
+        for item in record["structure_bindings"]:
+            structures.add(
+                (
+                    item["structure_id"],
                     item["record_id"],
                     item["record_version"],
                     item["record_fingerprint"],
@@ -763,6 +877,15 @@ def command_inspect(args: argparse.Namespace) -> dict[str, Any]:
                 "record_fingerprint": item[3],
             }
             for item in sorted(decisions)
+        ],
+        "structure_bindings": [
+            {
+                "structure_id": item[0],
+                "record_id": item[1],
+                "record_version": item[2],
+                "record_fingerprint": item[3],
+            }
+            for item in sorted(structures)
         ],
         "fingerprint": fingerprint(value),
     }
@@ -929,6 +1052,7 @@ def parser() -> argparse.ArgumentParser:
     new.add_argument("--target", required=True)
     new.add_argument("--correlation", action="append", default=[], metavar="KEY=VALUE")
     new.add_argument("--decision", action="append", default=[])
+    new.add_argument("--structure", action="append", default=[])
     new.add_argument("--criteria-ref", action="append", default=[])
     new.add_argument("--policy-ref", action="append", default=[])
     new.add_argument("--control-ref", action="append", default=[])
@@ -945,9 +1069,15 @@ def parser() -> argparse.ArgumentParser:
     bind.add_argument("decision")
     bind.add_argument("--output", required=True)
 
+    bind_structure = sub.add_parser("bind-structure", help="Create a new record bound to an ASRP Structure record")
+    bind_structure.add_argument("record")
+    bind_structure.add_argument("structure")
+    bind_structure.add_argument("--output", required=True)
+
     bundle = sub.add_parser("bundle-git-ape", help="Bundle a Git-Ape deployment trace")
     bundle.add_argument("deployment")
     bundle.add_argument("--decision", action="append", default=[])
+    bundle.add_argument("--structure", action="append", default=[])
     bundle.add_argument("--producer", default="git-ape")
     bundle.add_argument("--producer-version", default="unknown")
     bundle.add_argument("--identity", required=True)
@@ -988,6 +1118,8 @@ def main(argv: list[str] | None = None) -> int:
             emit(command_new(args))
         elif args.command == "bind":
             emit(command_bind(args))
+        elif args.command == "bind-structure":
+            emit(command_bind_structure(args))
         elif args.command == "bundle-git-ape":
             emit(command_bundle_git_ape(args))
         elif args.command == "verify":

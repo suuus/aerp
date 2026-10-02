@@ -58,9 +58,9 @@ Choose the narrowest correct evidence type. In particular:
 
 ### Bind
 
-Bind to exact ADRP records by fingerprint. The agent should resolve active ADRP
-decisions before execution, then pass those exact files to AERP capture or
-bundling.
+Bind to exact ADRP and ASRP records by fingerprint. The agent should resolve
+active Intent and Structure before execution, then pass those exact files to
+AERP capture or bundling.
 
 ### Verify
 
@@ -91,6 +91,7 @@ aerp fingerprint <record-or-bundle>
 aerp inspect <record-or-bundle>
 aerp new ...
 aerp bind <record> <decision> --output <new-record>
+aerp bind-structure <record> <structure> --output <new-record>
 aerp bundle-git-ape <deployment-dir> ...
 aerp verify <record-or-bundle> --artifact-root <root>
 aerp export-intoto <bundle> --output <statement>
@@ -118,7 +119,7 @@ Agents MUST NOT:
 1. ADRP resolver selects active records for the repository and Azure target.
 2. Git-Ape generates requirements and infrastructure artifacts.
 3. Security, policy, cost, availability, and WAF checks run.
-4. AERP captures each report and binds it to the selected ADRP fingerprints.
+4. AERP captures each report and binds it to the selected ADRP and ASRP fingerprints.
 5. Human approval identifies the exact plan or bundle fingerprint.
 6. Git-Ape deploys and stores logs, outputs, and tests.
 7. AERP produces and verifies a deployment bundle.
@@ -163,8 +164,10 @@ Before AERP capture:
 1. validate and verify the ADRP record set;
 2. resolve active records for the exact scope and time;
 3. preserve the canonical selected record files;
-4. provide those files to AERP using repeated `--decision` arguments;
-5. ensure the execution system retains the same fingerprints in plans,
+4. resolve ASRP and compile the execution manifest;
+5. provide canonical Intent and Structure files using repeated `--decision`
+   and `--structure` arguments;
+6. ensure the execution system retains the same fingerprints in plans,
    approvals, and traces.
 
 After AERP capture:

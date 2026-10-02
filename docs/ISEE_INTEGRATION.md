@@ -8,8 +8,9 @@ The **ISEE Framework** governs agentic work as a closed loop:
 Intent → Structure → Execution → Evidence
 ```
 
-AERP provides the durable Evidence record layer. ADRP provides the complementary
-Intent record layer.
+AERP provides the durable Evidence record layer.
+[ADRP](https://github.com/suuus/adrp) provides the complementary Intent record
+layer, and [ASRP](https://github.com/suuus/asrp) provides Structure.
 
 | ISEE layer | Question | Record or system |
 |---|---|---|
@@ -120,6 +121,7 @@ aerp new \
   --environment production \
   --target "/subscriptions/.../resourceGroups/rg-api-prod" \
   --decision .github/decisions/ADR-SECURITY-GATE/v001.json \
+  --structure .github/structures/STR-PRODUCTION-DEPLOYMENT/v001.json \
   --artifact .azure/deployments/deploy-20261002-103000/security-gate.json \
   --artifact-root . \
   --artifact-role report \
@@ -143,6 +145,15 @@ aerp bind \
 
 `aerp bind` creates a new immutable output rather than overwriting the original.
 
+Bind the same Evidence to exact Structure:
+
+```bash
+aerp bind-structure \
+  evidence/assessments/security-gate.json \
+  .github/structures/STR-PRODUCTION-DEPLOYMENT/v001.json \
+  --output evidence/assessments/security-gate.isee.json
+```
+
 ### 5. Bundle an execution trace
 
 For Git-Ape:
@@ -153,6 +164,7 @@ aerp bundle-git-ape .azure/deployments/deploy-20261002-103000 \
   --producer-version "0.8.0" \
   --target "/subscriptions/.../resourceGroups/rg-api-prod" \
   --decision .github/decisions/ADR-SECURITY-GATE/v001.json \
+  --structure .github/structures/STR-PRODUCTION-DEPLOYMENT/v001.json \
   --output .azure/deployments/deploy-20261002-103000/evidence/bundle.json
 ```
 

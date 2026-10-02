@@ -174,12 +174,25 @@ Bindings MUST identify an immutable decision payload. A title, URL, or
 A binding means “this evidence refers to this exact decision record.” It does
 not mean that the decision was authoritative, active, applicable, or satisfied.
 
-### 4.10 Policy and control references
+### 4.10 Structure bindings
+
+Each ASRP binding contains:
+
+- `structure_id`;
+- `record_id`;
+- `record_version`;
+- canonical `record_fingerprint`.
+
+A Structure binding means the Evidence refers to the exact ASRP Structure that
+governed or contextualised Execution. It does not prove that the Structure was
+active, complete, approved, or followed correctly.
+
+### 4.11 Policy and control references
 
 `policy_refs` and `control_refs` contain external identifiers. A reference MUST
 NOT be interpreted as proof that a policy or control applies.
 
-### 4.11 Artifacts
+### 4.12 Artifacts
 
 Every artifact contains:
 
@@ -196,7 +209,7 @@ with the stored digest.
 Allowed roles are `input`, `output`, `supporting`, `report`, `log`, `snapshot`,
 and `policy`.
 
-### 4.12 Relationships
+### 4.13 Relationships
 
 Evidence may be linked through:
 
@@ -207,7 +220,7 @@ Evidence may be linked through:
 Relationship values identify evidence records or external statements. Revoked
 evidence remains part of the historical chain and MUST NOT be silently removed.
 
-### 4.13 Integrity
+### 4.14 Integrity
 
 The record fingerprint is:
 

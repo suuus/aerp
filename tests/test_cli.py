@@ -36,6 +36,34 @@ def adrp_record() -> dict:
     }
 
 
+def asrp_record() -> dict:
+    return {
+        "schema_version": "ape-structure-record/v1",
+        "structure_id": "STR-PRODUCTION-DEPLOYMENT",
+        "record_id": str(uuid.uuid4()),
+        "record_version": 1,
+        "status": "effective",
+        "title": "Production deployment",
+        "description": "Test Structure",
+        "scope": ["production deployments"],
+        "intent_bindings": [],
+        "actors": [],
+        "elements": [],
+        "gates": [],
+        "entry_points": [],
+        "evidence_requirements": [],
+        "artifacts": [],
+        "relationships": {"depends_on": [], "supersedes": []},
+        "lifecycle": {
+            "effective_from": None,
+            "review_by": None,
+            "expires_at": None,
+            "drift_triggers": [],
+        },
+        "integrity": {"record_fingerprint": None},
+    }
+
+
 class CliTest(unittest.TestCase):
     def invoke(self, arguments: list[str]) -> tuple[int, str, str]:
         stdout = io.StringIO()
@@ -150,6 +178,34 @@ class CliTest(unittest.TestCase):
             )
             self.assertEqual(result, 2)
             self.assertIn("refusing to overwrite", stderr)
+
+    def test_bind_structure_uses_exact_asrp_fingerprint(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.json"
+            source.write_text(
+                (Path(__file__).parents[1] / "docs/examples/observation.v1.json").read_text(
+                    encoding="utf-8"
+                ),
+                encoding="utf-8",
+            )
+            structure = root / "structure.json"
+            structure.write_text(json.dumps(asrp_record()), encoding="utf-8")
+            output = root / "bound.json"
+            result, stdout, stderr = self.invoke(
+                [
+                    "bind-structure",
+                    str(source),
+                    str(structure),
+                    "--output",
+                    str(output),
+                ]
+            )
+            self.assertEqual(result, 0, stderr)
+            payload = json.loads(stdout)
+            self.assertEqual(payload["binding"]["structure_id"], "STR-PRODUCTION-DEPLOYMENT")
+            bound = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(len(bound["structure_bindings"]), 1)
 
     def test_fingerprint_detects_tampering(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

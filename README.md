@@ -100,6 +100,14 @@ aerp bind evidence/tls-observation.json decisions/ADR-TLS-POLICY.v1.json \
   --output evidence/tls-observation.bound.json
 ```
 
+Bind Evidence to the exact ASRP Structure that governed Execution:
+
+```bash
+aerp bind-structure evidence/tls-observation.bound.json \
+  structures/STR-PRODUCTION-DEPLOYMENT.v1.json \
+  --output evidence/tls-observation.isee.json
+```
+
 Bundle a Git-Ape deployment trace:
 
 ```bash
@@ -108,6 +116,7 @@ aerp bundle-git-ape .azure/deployments/deploy-20261002-103000 \
   --producer-version "0.8.0" \
   --target "/subscriptions/.../resourceGroups/rg-api-prod" \
   --decision decisions/ADR-SECURITY-GATE.v1.json \
+  --structure structures/STR-PRODUCTION-DEPLOYMENT.v1.json \
   --output .azure/deployments/deploy-20261002-103000/evidence/bundle.json
 ```
 
@@ -144,7 +153,9 @@ Their presence must never be rewritten as success.
 
 AERP is a small binding profile, not a replacement for mature standards:
 
-- **ADRP** supplies decision identity, authority, scope, lifecycle, and intent.
+- **ADRP** supplies decision identity, authority, scope, lifecycle, and Intent.
+- **[ASRP](https://github.com/suuus/asrp)** supplies Structure identity, gates,
+  entry points, and Evidence obligations.
 - **in-toto Statement** supplies a standard attestation envelope shape.
 - **DSSE and Sigstore** can sign and publish exported statements.
 - **SLSA provenance** remains the appropriate predicate for software build provenance.

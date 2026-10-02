@@ -3,9 +3,38 @@ import io
 import json
 import tempfile
 import unittest
+import uuid
 from pathlib import Path
 
 from aerp import cli
+
+
+def asrp_record() -> dict:
+    return {
+        "schema_version": "ape-structure-record/v1",
+        "structure_id": "STR-PRODUCTION-DEPLOYMENT",
+        "record_id": str(uuid.uuid4()),
+        "record_version": 1,
+        "status": "effective",
+        "title": "Production deployment",
+        "description": "Test Structure",
+        "scope": ["production deployments"],
+        "intent_bindings": [],
+        "actors": [],
+        "elements": [],
+        "gates": [],
+        "entry_points": [],
+        "evidence_requirements": [],
+        "artifacts": [],
+        "relationships": {"depends_on": [], "supersedes": []},
+        "lifecycle": {
+            "effective_from": None,
+            "review_by": None,
+            "expires_at": None,
+            "drift_triggers": [],
+        },
+        "integrity": {"record_fingerprint": None},
+    }
 
 
 class GitApeAdapterTest(unittest.TestCase):
@@ -34,6 +63,8 @@ class GitApeAdapterTest(unittest.TestCase):
             (drift / "drift-details.json").write_text(
                 '{"differences":[]}\n', encoding="utf-8"
             )
+            structure = Path(directory) / "structure.json"
+            structure.write_text(json.dumps(asrp_record()), encoding="utf-8")
             bundle = deployment / "evidence/bundle.json"
             result, stdout, stderr = self.invoke(
                 [
@@ -45,6 +76,8 @@ class GitApeAdapterTest(unittest.TestCase):
                     "0.8.0",
                     "--target",
                     "/subscriptions/test/resourceGroups/rg-api",
+                    "--structure",
+                    str(structure),
                     "--observed-at",
                     "2026-10-02T10:00:00Z",
                     "--output",
@@ -53,6 +86,11 @@ class GitApeAdapterTest(unittest.TestCase):
             )
             self.assertEqual(result, 0, stderr)
             self.assertEqual(json.loads(stdout)["records"], 4)
+            bundle_value = json.loads(bundle.read_text(encoding="utf-8"))
+            self.assertEqual(
+                bundle_value["records"][0]["structure_bindings"][0]["structure_id"],
+                "STR-PRODUCTION-DEPLOYMENT",
+            )
 
             result, stdout, stderr = self.invoke(
                 ["verify", str(bundle), "--artifact-root", str(deployment)]
@@ -60,7 +98,6 @@ class GitApeAdapterTest(unittest.TestCase):
             self.assertEqual(result, 0, stderr)
             self.assertTrue(json.loads(stdout)["valid"])
 
-            bundle_value = json.loads(bundle.read_text(encoding="utf-8"))
             assessment = next(
                 record
                 for record in bundle_value["records"]

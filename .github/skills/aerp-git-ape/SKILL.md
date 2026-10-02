@@ -16,6 +16,7 @@ description: Convert a Git-Ape .azure/deployments execution trace into a portabl
      --producer-version "<git-ape-version>" \
      --target "<subscription/resource-group>" \
      --decision path/to/ADR.json \
+     --structure path/to/Structure.json \
      --output .azure/deployments/<id>/evidence/bundle.json
    ```
 
