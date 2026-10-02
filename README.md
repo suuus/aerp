@@ -11,6 +11,9 @@ focused skills, a Git-Ape adapter, and exports for established attestation and
 compliance ecosystems. AERP is the durable **Evidence** record layer of the
 **ISEE Framework: Intent → Structure → Execution → Evidence**.
 
+Learn more about the ISEE operating framework at
+[agentile.org](https://agentile.org).
+
 ```text
 ADRP decision
     ↓ immutable decision fingerprint
@@ -60,7 +63,25 @@ to the exact canonical ADRP record and fingerprint.
 See [Setting up AERP with ADRP for ISEE](docs/ISEE_INTEGRATION.md) for the
 complete workflow, repository layout, agent contract, and CI pattern.
 
-## Install
+## Install with GitHub Copilot
+
+Install the complete [ISEE plugin suite](https://github.com/suuus/isee-plugins):
+
+```bash
+copilot plugin marketplace add suuus/isee-plugins
+copilot plugin install isee-suite@isee
+```
+
+To load only the AERP agent and skills:
+
+```bash
+copilot plugin install aerp@isee
+```
+
+Use the suite's `isee-setup` skill to install or diagnose the deterministic
+CLIs explicitly.
+
+## Install the CLI from a checkout
 
 ```bash
 python3 -m pip install -e .
