@@ -15,6 +15,12 @@ approval messages. Merely retaining those files does not answer:
 
 AERP turns those loose artifacts into explicit, verifiable records.
 
+Within the **ISEE Framework — Intent → Structure → Execution → Evidence**,
+AERP is the durable Evidence record layer. ADRP supplies the exact Intent record
+and fingerprint; Structure and Execution produce the implementation context and
+artifacts; AERP preserves what actually happened and routes material findings
+back to Intent review.
+
 ## The semantic ladder
 
 Keep these statements separate:

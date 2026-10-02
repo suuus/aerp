@@ -10,6 +10,18 @@ AERP is an application profile for portable evidence. It does not define a new
 signature algorithm, transparency service, compliance framework, or
 authorisation model.
 
+AERP is the durable **Evidence** record layer of the **ISEE Framework**:
+
+```text
+Intent → Structure → Execution → Evidence
+ ADRP                                AERP
+```
+
+ADRP or another decision system establishes Intent standing. Structure and
+Execution systems consume that Intent and retain its immutable identity. AERP
+then binds observations, assessments, approvals, execution artifacts, outcomes,
+and drift to the exact Intent records that shaped the work.
+
 ## 2. Purpose
 
 AERP connects four concerns that are commonly stored separately:
@@ -21,6 +33,9 @@ AERP connects four concerns that are commonly stored separately:
 
 The central unit is an evidence record. Multiple records concerning one subject
 can be transported as an evidence bundle.
+
+For the complete ADRP-to-AERP setup and closed-loop review contract, see
+[AERP and ADRP in ISEE](ISEE_INTEGRATION.md).
 
 ## 3. Trust boundaries
 

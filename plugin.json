@@ -1,6 +1,6 @@
 {
   "name": "aerp",
-  "description": "Capture, bind, bundle, inspect, and verify evidence connecting decisions to execution and outcomes.",
+  "description": "Capture and verify the Evidence layer of ISEE, bound to exact ADRP Intent records.",
   "version": "0.1.0",
   "author": {
     "name": "Suzanne Daniels",
@@ -15,6 +15,7 @@
     "compliance",
     "evidence",
     "governance",
+    "isee",
     "provenance"
   ],
   "agents": ".github/agents/",

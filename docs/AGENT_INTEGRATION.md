@@ -2,6 +2,17 @@
 
 ## Dependency direction
 
+Within ISEE, the agent operates the Evidence boundary:
+
+```text
+Intent             Structure            Execution            Evidence
+ADRP resolve  →     referenced      →    consuming agent  →    AERP capture
+and fingerprint     architecture          or system             and verify
+```
+
+The AERP agent must receive exact ADRP files or fingerprints from the Intent
+stage. It must not infer current decision standing from an evidence binding.
+
 ```text
 AERP Agent
     ↓ orchestrates semantic workflows
@@ -144,3 +155,25 @@ CI remains the enforcement boundary.
 
 Signature verification should be a separate step using the organisation's
 chosen identity and trust policy.
+
+## ADRP setup contract
+
+Before AERP capture:
+
+1. validate and verify the ADRP record set;
+2. resolve active records for the exact scope and time;
+3. preserve the canonical selected record files;
+4. provide those files to AERP using repeated `--decision` arguments;
+5. ensure the execution system retains the same fingerprints in plans,
+   approvals, and traces.
+
+After AERP capture:
+
+1. validate the record or bundle;
+2. verify referenced artifact bytes;
+3. distinguish local integrity from signature and producer authentication;
+4. compare outcomes with ADRP expected evidence and drift triggers;
+5. route material differences to ADRP review rather than editing either
+   immutable artifact.
+
+See [AERP and ADRP in ISEE](ISEE_INTEGRATION.md) for the complete setup.

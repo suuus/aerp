@@ -1,4 +1,6 @@
-# Ape Evidence Record Profile
+# AERP — Ape Evidence Record Profile
+
+> The durable Evidence record layer for the ISEE Framework.
 
 [![CI](https://github.com/suuus/aerp/actions/workflows/ci.yml/badge.svg)](https://github.com/suuus/aerp/actions/workflows/ci.yml)
 
@@ -6,7 +8,8 @@
 decisions to agent actions, execution artifacts, observed outcomes, and drift.
 It includes a dependency-free Python CLI, JSON Schemas, a GitHub Copilot agent,
 focused skills, a Git-Ape adapter, and exports for established attestation and
-compliance ecosystems.
+compliance ecosystems. AERP is the durable **Evidence** record layer of the
+**ISEE Framework: Intent → Structure → Execution → Evidence**.
 
 ```text
 ADRP decision
@@ -30,6 +33,32 @@ AERP answers:
 
 It deliberately does **not** decide whether a decision is authoritative,
 whether a control applies, or whether an organisation is compliant.
+
+## AERP in the ISEE Framework
+
+```text
+Intent       ADRP records decisions, authority, scope, trade-offs,
+             autonomy boundaries, lifecycle, and expected evidence.
+    ↓
+Structure    Architecture, ownership, controls, policy, and agent boundaries
+             materialise the active Intent.
+    ↓
+Execution    Agents and delivery systems act while retaining the exact ADRP
+             fingerprints that shaped the action.
+    ↓
+Evidence     AERP records observations, assessments, approvals, executions,
+             outcomes, artifacts, and drift.
+    ↺
+Review       Material Evidence challenges the original Intent through ADRP.
+```
+
+AERP does not determine whether an ADRP record is active or authoritative.
+Resolve that standing with
+[ADRP](https://github.com/suuus/adrp) before execution; then bind AERP evidence
+to the exact canonical ADRP record and fingerprint.
+
+See [Setting up AERP with ADRP for ISEE](docs/ISEE_INTEGRATION.md) for the
+complete workflow, repository layout, agent contract, and CI pattern.
 
 ## Install
 
@@ -132,6 +161,7 @@ AERP into signing or compliance workflows.
 - [Standard](docs/STANDARD.md)
 - [Recording and processing evidence](docs/RECORDING_EVIDENCE.md)
 - [Agent integration](docs/AGENT_INTEGRATION.md)
+- [ISEE integration with ADRP](docs/ISEE_INTEGRATION.md)
 - [Git-Ape adapter](docs/GIT_APE.md)
 - [Standards interoperability](docs/INTEROPERABILITY.md)
 - [Security policy](SECURITY.md)

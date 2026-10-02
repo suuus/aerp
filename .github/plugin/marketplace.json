@@ -1,13 +1,13 @@
 {
   "name": "aerp",
   "metadata": {
-    "description": "Ape Evidence Record Profile agent and deterministic evidence tooling.",
+    "description": "The deterministic AERP Evidence record layer for the ISEE Framework.",
     "version": "0.1.0"
   },
   "plugins": [
     {
       "name": "aerp",
-      "description": "Bind machine-verifiable evidence to decisions, executions, and outcomes.",
+      "description": "Bind ISEE Evidence to exact ADRP Intent, executions, and outcomes.",
       "version": "0.1.0",
       "source": "."
     }

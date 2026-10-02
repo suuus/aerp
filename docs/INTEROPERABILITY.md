@@ -12,6 +12,15 @@ ADRP records why a choice was made, who may authorise it, where it applies, its
 lifecycle, and its autonomy implications. AERP stores the immutable ADRP record
 fingerprint alongside evidence.
 
+Together they form the durable endpoints of ISEE:
+
+```text
+ADRP Intent → Structure → Execution → AERP Evidence → ADRP review
+```
+
+See [AERP and ADRP in ISEE](ISEE_INTEGRATION.md) for setup and operational
+guidance.
+
 The link is deliberately one-way:
 
 ```text

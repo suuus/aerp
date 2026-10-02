@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Position AERP as the durable Evidence record layer of the ISEE Framework.
+- Document setup with ADRP as the complementary Intent record layer.
+- Add the closed-loop Intent-to-Evidence agent and CI contract.
+
 ## 0.1.0 - 2026-10-02
 
 - Define AERP evidence record and bundle schemas.
